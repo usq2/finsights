@@ -3,7 +3,7 @@ import {
   createOAuthClient,
   getAuthUrl,
   getTokenFromCode,
-} from "../../service/auth";
+} from "../../utils/auth";
 import { google } from "googleapis";
 
 export class OnboardingControllers {
@@ -22,9 +22,11 @@ export class OnboardingControllers {
   ) {
     // get code
     const query = pRequest.query as { code: string };
-    const { code } = query;
     // get tokens from code
+    const { code } = query;
+    // create oauth2 client
     const oAuth2Client = createOAuthClient(pFastify);
+    // get tokens from query params
     const tokens = await getTokenFromCode(oAuth2Client, code);
     const oauth2 = google.oauth2({ version: "v2", auth: oAuth2Client });
     const { data } = await oauth2.userinfo.get();

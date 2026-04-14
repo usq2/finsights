@@ -1,10 +1,4 @@
 import { type FastifyPluginAsync } from "fastify";
-import { google } from "googleapis";
-import {
-  createOAuthClient,
-  getAuthUrl,
-  getTokenFromCode,
-} from "../../service/auth";
 import { OnboardingControllers } from "../../controllers/onboarding";
 
 const OnboardingControllersInstance = new OnboardingControllers();

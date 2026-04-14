@@ -1,8 +1,10 @@
-import { type FastifyPluginAsync } from "fastify";
-import { listEmailsFromSenders } from "../service/gmail";
+import { FastifyPluginAsync } from "fastify";
+import EmailRoutes from "./email";
+import OnboardingRoutes from "./onboarding";
 
-const root: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  // Step 3: Fetch emails by sender domains and date
+const routes: FastifyPluginAsync = async (pFastify, pOpts) => {
+  pFastify.register(OnboardingRoutes);
+  pFastify.register(EmailRoutes);
 };
 
-export default root;
+export default routes;

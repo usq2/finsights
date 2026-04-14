@@ -1,0 +1,81 @@
+services:
+  # 1. API - Fastify (Node 20)
+  api:
+    build: ./onboarding_server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./onboarding_server:/usr/src/app
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/insights
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - REDIRECT_URI=http://localhost:3000/auth/callback
+      - GOOGLE_CLIENT_ID=""
+      - GOOGLE_CLIENT_SECRET=""
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # 2. Ingester - Go
+  # ingester:
+  #   build: ./ingester-go
+  #   environment:
+  #     - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+  #     - S3_ENDPOINT=http://r2-emulator:9000
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+
+  # 3. Database - MongoDB
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    # environment:
+    #   - MONGO_INITDB_ROOT_USERNAME=admin
+    #   - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - ./data/db:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 4. Cache - Redis
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+
+  # 5. Message Broker - RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    # volumes:
+    #   - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # 6. S3/R2 Emulator
+  r2-emulator:
+    image: rclone/rclone
+    volumes:
+      - ./data/buckets:/data:rw
+    ports:
+      - "9000:9000"
+    command: serve s3 --addr :9000 --auth-key "admin,password123" /data

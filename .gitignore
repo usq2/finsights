@@ -64,3 +64,4 @@ profile*
 # compiled app
 */**/dist
 
+*/**/data
